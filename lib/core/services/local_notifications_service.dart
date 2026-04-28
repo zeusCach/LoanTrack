@@ -84,8 +84,6 @@ class LocalNotificationsService {
         iOS: DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
       payload: 'loan:$loanId:payment:$paymentNumber',
     );
   }
