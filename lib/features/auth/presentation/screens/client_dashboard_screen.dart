@@ -7,6 +7,7 @@ import '../../../loans/domain/entities/loan_entity.dart';
 import '../../../loans/presentation/providers/loan_provider.dart';
 import '../../../payments/presentation/providers/payment_provider.dart';
 import '../../../payments/domain/entities/payment_entity.dart';
+import '../../../payments/presentation/providers/payment_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/client_dashboard_provider.dart';
 
