@@ -45,6 +45,7 @@ class _RegisterPaymentScreenState extends ConsumerState<RegisterPaymentScreen> {
         await ref.read(paymentNotifierProvider.notifier).registerPayment(
               RegisterPaymentParams(
                 paymentId: widget.payment.id,
+                clientId: widget.payment.clientId,
                 method: _method,
                 paidDate: _paidDate,
                 penaltyAmount: double.tryParse(_penaltyController.text) ?? 0,

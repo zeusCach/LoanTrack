@@ -3,6 +3,7 @@ import '../repositories/payment_repository.dart';
 
 class RegisterPaymentParams {
   final String paymentId;
+  final String clientId;
   final PaymentMethod method;
   final DateTime paidDate;
   final double penaltyAmount;
@@ -14,6 +15,7 @@ class RegisterPaymentParams {
 
   const RegisterPaymentParams({
     required this.paymentId,
+    required this.clientId,
     required this.method,
     required this.paidDate,
     required this.penaltyAmount,
@@ -32,11 +34,14 @@ class RegisterPaymentUseCase {
   Future<void> call(RegisterPaymentParams params) =>
       _repository.registerPayment(
         paymentId: params.paymentId,
+        clientId: params.clientId,
         method: params.method,
         paidDate: params.paidDate,
         penaltyAmount: params.penaltyAmount,
         penaltyReason: params.penaltyReason,
         notes: params.notes,
         expectedDate: params.expectedDate,
+        amount: params.amount,
+        paymentNumber: params.paymentNumber,
       );
 }

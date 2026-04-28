@@ -20,21 +20,27 @@ class PaymentRepositoryImpl implements PaymentRepository {
   @override
   Future<void> registerPayment({
     required String paymentId,
+    required String clientId,
     required PaymentMethod method,
     required DateTime paidDate,
     required double penaltyAmount,
     required String penaltyReason,
     required String notes,
     required DateTime expectedDate,
+    required double amount,
+    required int paymentNumber,
   }) =>
       _dataSource.registerPayment(
         paymentId: paymentId,
+        clientId: clientId,
         method: method,
         paidDate: paidDate,
         penaltyAmount: penaltyAmount,
         penaltyReason: penaltyReason,
         notes: notes,
         expectedDate: expectedDate,
+        amount: amount,
+        paymentNumber: paymentNumber,
       );
 
   @override

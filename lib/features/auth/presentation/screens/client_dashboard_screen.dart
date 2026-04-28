@@ -5,21 +5,53 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../loans/domain/entities/loan_entity.dart';
 import '../../../loans/presentation/providers/loan_provider.dart';
-import '../../../payments/presentation/providers/payment_provider.dart';
+import '../../../notifications/domain/entities/client_notification_entity.dart';
+import '../../../notifications/presentation/providers/notification_provider.dart';
 import '../../../payments/domain/entities/payment_entity.dart';
 import '../../../payments/presentation/providers/payment_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/client_dashboard_provider.dart';
 
-class ClientDashboardScreen extends ConsumerWidget {
+class ClientDashboardScreen extends ConsumerStatefulWidget {
   const ClientDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ClientDashboardScreen> createState() =>
+      _ClientDashboardScreenState();
+}
+
+class _ClientDashboardScreenState extends ConsumerState<ClientDashboardScreen> {
+  final Set<String> _shownNotificationIds = {};
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider).value;
     if (user == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+
+    ref.listen<AsyncValue<List<ClientNotificationEntity>>>(
+      unreadNotificationsProvider,
+      (_, next) {
+        next.whenData((notifications) {
+          for (final notif in notifications) {
+            if (_shownNotificationIds.contains(notif.id)) continue;
+            _shownNotificationIds.add(notif.id);
+            ref
+                .read(notificationRepositoryProvider)
+                .markAsRead(notif.clientId, notif.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(notif.body),
+                backgroundColor: AppColors.success,
+                duration: const Duration(seconds: 5),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        });
+      },
+    );
 
     final statsAsync = ref.watch(clientDashboardStatsProvider(user.uid));
     final loansAsync = ref.watch(clientLoansProvider(user.uid));

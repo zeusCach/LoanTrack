@@ -8,12 +8,15 @@ abstract class PaymentRemoteDataSource {
   Stream<List<PaymentModel>> getPaymentsByClient(String clientId);
   Future<void> registerPayment({
     required String paymentId,
+    required String clientId,
     required PaymentMethod method,
     required DateTime paidDate,
     required double penaltyAmount,
     required String penaltyReason,
     required String notes,
     required DateTime expectedDate,
+    required double amount,
+    required int paymentNumber,
   });
   Future<void> addPenalty({
     required String paymentId,
@@ -51,15 +54,17 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
   @override
   Future<void> registerPayment({
     required String paymentId,
+    required String clientId,
     required PaymentMethod method,
     required DateTime paidDate,
     required double penaltyAmount,
     required String penaltyReason,
     required String notes,
     required DateTime expectedDate,
+    required double amount,
+    required int paymentNumber,
   }) async {
     try {
-      // Determina si es adelantado o atrasado
       final status = paidDate.isBefore(expectedDate)
           ? PaymentStatus.early
           : paidDate.isAfter(expectedDate)
@@ -75,11 +80,42 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
         'notes': notes,
       });
 
-      // Verifica si todos los pagos del préstamo están completos
-      await _checkAndCompleteLoan(paymentId);
+      await Future.wait([
+        _checkAndCompleteLoan(paymentId),
+        _createClientNotification(
+          clientId: clientId,
+          paymentId: paymentId,
+          paymentNumber: paymentNumber,
+          amount: amount,
+        ),
+      ]);
     } catch (e) {
       throw ServerException('Error al registrar pago: $e');
     }
+  }
+
+  Future<void> _createClientNotification({
+    required String clientId,
+    required String paymentId,
+    required int paymentNumber,
+    required double amount,
+  }) async {
+    final doc = _firestore
+        .collection('users')
+        .doc(clientId)
+        .collection('notifications')
+        .doc();
+    await doc.set({
+      'clientId': clientId,
+      'title': 'Pago registrado',
+      'body':
+          '✅ Tu cuota #$paymentNumber por \$${amount.toStringAsFixed(2)} fue registrada',
+      'paymentId': paymentId,
+      'paymentNumber': paymentNumber,
+      'amount': amount,
+      'isRead': false,
+      'createdAt': Timestamp.fromDate(DateTime.now()),
+    });
   }
 
   @override
