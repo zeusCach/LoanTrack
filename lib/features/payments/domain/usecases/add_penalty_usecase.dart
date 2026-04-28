@@ -4,11 +4,13 @@ class AddPenaltyParams {
   final String paymentId;
   final double penaltyAmount;
   final String penaltyReason;
+  final int paymentNumber;
 
   const AddPenaltyParams({
     required this.paymentId,
     required this.penaltyAmount,
     required this.penaltyReason,
+    required this.paymentNumber,
   });
 }
 

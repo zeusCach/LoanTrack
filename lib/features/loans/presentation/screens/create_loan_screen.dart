@@ -84,6 +84,7 @@ class _CreateLoanScreenState extends ConsumerState<CreateLoanScreen> {
             frequency: _frequency,
             startDate: _startDate,
           ),
+          clientName: widget.clientName,
         );
 
     if (mounted) {

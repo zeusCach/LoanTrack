@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import '../../../../core/services/local_notifications_service.dart';
 import '../../../../shared/providers/firebase_providers.dart';
 import '../../data/datasources/payment_remote_datasource.dart';
 import '../../data/repositories/payment_repository_impl.dart';
@@ -8,6 +9,10 @@ import '../../domain/repositories/payment_repository.dart';
 import '../../domain/usecases/add_penalty_usecase.dart';
 import '../../domain/usecases/get_payments_usecase.dart';
 import '../../domain/usecases/register_payment_usecase.dart';
+
+final localNotificationsServiceProvider = Provider<LocalNotificationsService>((ref) {
+  return LocalNotificationsService.instance;
+});
 
 // Datasource
 final paymentDataSourceProvider = Provider<PaymentRemoteDataSource>((ref) {
@@ -52,18 +57,26 @@ final clientPaymentsProvider =
 class PaymentNotifier extends StateNotifier<AsyncValue<void>> {
   final RegisterPaymentUseCase _registerPayment;
   final AddPenaltyUseCase _addPenalty;
+  final LocalNotificationsService _notifications;
 
   PaymentNotifier({
     required RegisterPaymentUseCase registerPayment,
     required AddPenaltyUseCase addPenalty,
+    required LocalNotificationsService notifications,
   })  : _registerPayment = registerPayment,
         _addPenalty = addPenalty,
+        _notifications = notifications,
         super(const AsyncValue.data(null));
 
   Future<bool> registerPayment(RegisterPaymentParams params) async {
     state = const AsyncValue.loading();
     try {
       await _registerPayment(params);
+      await _notifications.showPaymentRegistered(
+        paymentId: params.paymentId,
+        paymentNumber: params.paymentNumber,
+        amount: params.amount,
+      );
       state = const AsyncValue.data(null);
       return true;
     } catch (e) {
@@ -76,6 +89,11 @@ class PaymentNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _addPenalty(params);
+      await _notifications.showPenaltyApplied(
+        paymentId: params.paymentId,
+        paymentNumber: params.paymentNumber,
+        penaltyAmount: params.penaltyAmount,
+      );
       state = const AsyncValue.data(null);
       return true;
     } catch (e) {
@@ -90,5 +108,6 @@ final paymentNotifierProvider =
   return PaymentNotifier(
     registerPayment: ref.watch(registerPaymentUseCaseProvider),
     addPenalty: ref.watch(addPenaltyUseCaseProvider),
+    notifications: ref.watch(localNotificationsServiceProvider),
   );
 });
