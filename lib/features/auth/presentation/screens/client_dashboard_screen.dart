@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../loans/domain/entities/loan_entity.dart';
 import '../../../loans/presentation/providers/loan_provider.dart';
+import '../../../payments/presentation/providers/payment_provider.dart';
 import '../../../payments/domain/entities/payment_entity.dart';
 import '../providers/auth_provider.dart';
 import '../providers/client_dashboard_provider.dart';
@@ -86,7 +87,8 @@ class ClientDashboardScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Saldo restante: ${currency.format(stats.remainingBalance)}',
+                          Text(
+                              'Saldo restante: ${currency.format(stats.remainingBalance)}',
                               style: const TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
@@ -172,9 +174,11 @@ class _StatCard extends StatelessWidget {
             Icon(icon, color: color),
             const SizedBox(height: 8),
             Text(value,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
             Text(label,
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                style: const TextStyle(
+                    fontSize: 12, color: AppColors.textSecondary)),
           ],
         ),
       ),
@@ -202,10 +206,10 @@ class _LoanStatusCard extends ConsumerWidget {
         loading: () => const LinearProgressIndicator(minHeight: 8),
         error: (e, _) => Text('Error: $e'),
         data: (payments) {
-          final paid = payments
-              .where((p) => p.status != PaymentStatus.pending)
-              .length;
-          final late = payments.where((p) => p.status == PaymentStatus.late).length;
+          final paid =
+              payments.where((p) => p.status != PaymentStatus.pending).length;
+          final late =
+              payments.where((p) => p.status == PaymentStatus.late).length;
           final progress = payments.isEmpty ? 0.0 : (paid / payments.length);
 
           return Column(
@@ -216,7 +220,8 @@ class _LoanStatusCard extends ConsumerWidget {
               const SizedBox(height: 8),
               LinearProgressIndicator(value: progress),
               const SizedBox(height: 6),
-              Text('Cuotas pendientes: ${payments.length - paid} · Atrasadas: $late'),
+              Text(
+                  'Cuotas pendientes: ${payments.length - paid} · Atrasadas: $late'),
             ],
           );
         },
