@@ -43,6 +43,7 @@ class _AddPenaltyScreenState extends ConsumerState<AddPenaltyScreen> {
           paymentId: widget.payment.id,
           penaltyAmount: double.parse(_amountController.text),
           penaltyReason: _reasonController.text.trim(),
+          paymentNumber: widget.payment.paymentNumber,
         ));
 
     if (mounted) {

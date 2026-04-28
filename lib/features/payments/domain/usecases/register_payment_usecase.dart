@@ -9,6 +9,8 @@ class RegisterPaymentParams {
   final String penaltyReason;
   final String notes;
   final DateTime expectedDate;
+  final double amount;
+  final int paymentNumber;
 
   const RegisterPaymentParams({
     required this.paymentId,
@@ -18,6 +20,8 @@ class RegisterPaymentParams {
     required this.penaltyReason,
     required this.notes,
     required this.expectedDate,
+    required this.amount,
+    required this.paymentNumber,
   });
 }
 

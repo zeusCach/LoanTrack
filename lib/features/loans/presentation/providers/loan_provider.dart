@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import '../../../../core/services/local_notifications_service.dart';
+import '../../../../core/utils/loan_calculator.dart';
 import '../../../../shared/providers/firebase_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/datasources/loan_remote_datasource.dart';
@@ -46,18 +48,43 @@ final adminLoansProvider = StreamProvider<List<LoanEntity>>((ref) {
 class LoanNotifier extends StateNotifier<AsyncValue<void>> {
   final CreateLoanUseCase _createLoan;
   final LoanRepository _repository;
+  final LocalNotificationsService _notifications;
 
   LoanNotifier({
     required CreateLoanUseCase createLoan,
     required LoanRepository repository,
+    required LocalNotificationsService notifications,
   })  : _createLoan = createLoan,
         _repository = repository,
+        _notifications = notifications,
         super(const AsyncValue.data(null));
 
-  Future<bool> createLoan(CreateLoanParams params) async {
+  Future<bool> createLoan(CreateLoanParams params, {String? clientName}) async {
     state = const AsyncValue.loading();
     try {
-      await _createLoan(params);
+      final loan = await _createLoan(params);
+
+      final frequency = LoanModelFrequencyMapper.fromString(params.frequency);
+      final generatedPayments = LoanCalculator.generatePayments(
+        loanId: loan.id,
+        clientId: params.clientId,
+        adminId: params.adminId,
+        paymentAmount: loan.paymentAmount,
+        totalPayments: params.totalPayments,
+        frequency: frequency,
+        startDate: params.startDate,
+      );
+
+      for (final payment in generatedPayments) {
+        await _notifications.schedulePaymentDueReminder(
+          loanId: loan.id,
+          clientName: clientName ?? 'cliente',
+          paymentNumber: payment.paymentNumber,
+          expectedDate: payment.expectedDate,
+          amount: payment.amount,
+        );
+      }
+
       state = const AsyncValue.data(null);
       return true;
     } catch (e) {
@@ -75,10 +102,25 @@ class LoanNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
+class LoanModelFrequencyMapper {
+  static LoanFrequency fromString(String frequency) {
+    switch (frequency) {
+      case 'weekly':
+        return LoanFrequency.weekly;
+      case 'biweekly':
+        return LoanFrequency.biweekly;
+      case 'monthly':
+      default:
+        return LoanFrequency.monthly;
+    }
+  }
+}
+
 final loanNotifierProvider =
     StateNotifierProvider<LoanNotifier, AsyncValue<void>>((ref) {
   return LoanNotifier(
     createLoan: ref.watch(createLoanUseCaseProvider),
     repository: ref.watch(loanRepositoryProvider),
+    notifications: LocalNotificationsService.instance,
   );
 });

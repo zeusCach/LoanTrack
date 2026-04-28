@@ -6,11 +6,13 @@ import 'core/constants/app_colors.dart';
 import 'core/constants/app_routes.dart';
 import 'core/constants/app_strings.dart';
 import 'firebase_options.dart';
+import 'core/services/local_notifications_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await initializeDateFormatting('es', null); // ← agrega esto
+  await initializeDateFormatting('es', null);
+  await LocalNotificationsService.instance.initialize();
   runApp(const ProviderScope(child: LoanTrackApp()));
 }
 

@@ -51,6 +51,8 @@ class _RegisterPaymentScreenState extends ConsumerState<RegisterPaymentScreen> {
                 penaltyReason: _penaltyReasonController.text.trim(),
                 notes: _notesController.text.trim(),
                 expectedDate: widget.payment.expectedDate,
+                amount: widget.payment.amount,
+                paymentNumber: widget.payment.paymentNumber,
               ),
             );
 
