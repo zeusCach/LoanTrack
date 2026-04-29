@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../clients/domain/entities/client_entity.dart';
@@ -38,6 +39,13 @@ class AdminLoansScreen extends ConsumerWidget {
               Tab(text: 'Completados'),
             ],
           ),
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => context.push('/admin/loans/new'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          icon: const Icon(Icons.add),
+          label: const Text('Nuevo préstamo'),
         ),
         body: loansAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
