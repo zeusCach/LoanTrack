@@ -246,7 +246,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final viewInsets = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(24, 28, 24, 28 + viewInsets),
+      padding: EdgeInsets.fromLTRB(24, 28, 24, 28 + (viewInsets * 0.3)),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
