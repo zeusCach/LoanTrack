@@ -133,8 +133,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Widget _buildSplashContent() {
     final centerOffset = _showLogin
-        ? Alignment.lerp(Alignment.center, Alignment.topCenter,
-            _loginSlide.value)!
+        ? Alignment.lerp(
+            Alignment.center, Alignment.topCenter, _loginSlide.value)!
         : Alignment.center;
 
     return Align(
@@ -212,10 +212,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const Text(
-                          'Bienvenido a LoanTrack',
+                          'Bienvenido',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -278,8 +278,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                      color: _gradientEnd, width: 1.5),
+                  borderSide: const BorderSide(color: _gradientEnd, width: 1.5),
                 ),
               ),
               validator: (v) {
@@ -303,8 +302,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                      color: _gradientEnd, width: 1.5),
+                  borderSide: const BorderSide(color: _gradientEnd, width: 1.5),
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(_obscurePassword
