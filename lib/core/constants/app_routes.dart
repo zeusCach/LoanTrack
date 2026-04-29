@@ -10,6 +10,7 @@ import '../../features/loans/presentation/screens/client_loans_status_screen.dar
 import '../../features/payments/presentation/screens/admin_payments_screen.dart';
 import '../../features/payments/presentation/screens/client_payments_screen.dart';
 import '../../features/reports/presentation/screens/admin_reports_screen.dart';
+import '../widgets/admin_shell.dart';
 import '../widgets/entity_loaders.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -42,23 +43,43 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
 
-      // Admin
-      GoRoute(
-        path: '/admin/dashboard',
-        builder: (_, __) => const AdminDashboardScreen(),
+      // Admin shell con bottom nav (Inicio, Clientes, Préstamos, Reportes)
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AdminShellScaffold(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/admin/dashboard',
+              builder: (_, __) => const AdminDashboardScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/admin/clients',
+              builder: (_, __) => const ClientsScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/admin/loans',
+              builder: (_, __) => const AdminLoansScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/admin/reports',
+              builder: (_, __) => const AdminReportsScreen(),
+            ),
+          ]),
+        ],
       ),
-      GoRoute(
-        path: '/admin/clients',
-        builder: (_, __) => const ClientsScreen(),
-      ),
+
+      // Pantallas admin fuera del shell (sin bottom nav)
       GoRoute(
         path: '/admin/clients/:clientId',
         builder: (_, s) =>
             ClientDetailRoute(clientId: s.pathParameters['clientId']!),
-      ),
-      GoRoute(
-        path: '/admin/loans',
-        builder: (_, __) => const AdminLoansScreen(),
       ),
       GoRoute(
         path: '/admin/payments',
@@ -72,10 +93,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/admin/loans/:loanId',
         builder: (_, s) =>
             LoanDetailRoute(loanId: s.pathParameters['loanId']!),
-      ),
-      GoRoute(
-        path: '/admin/reports',
-        builder: (_, __) => const AdminReportsScreen(),
       ),
 
       // Client

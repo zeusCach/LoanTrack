@@ -171,9 +171,8 @@ class _PaymentTile extends StatelessWidget {
   Color get _statusColor {
     switch (payment.status) {
       case PaymentStatus.paid:
-        return AppColors.success;
       case PaymentStatus.early:
-        return AppColors.primary;
+        return AppColors.success;
       case PaymentStatus.late:
         return AppColors.danger;
       case PaymentStatus.pending:
@@ -210,12 +209,17 @@ class _PaymentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _statusColor.withOpacity(0.3)),
+        border: Border(
+          left: BorderSide(color: _statusColor, width: 4),
+          top: BorderSide(color: Colors.grey.shade200),
+          right: BorderSide(color: Colors.grey.shade200),
+          bottom: BorderSide(color: Colors.grey.shade200),
+        ),
       ),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -224,8 +228,16 @@ class _PaymentTile extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(_statusIcon, color: _statusColor, size: 20),
-                  const SizedBox(width: 8),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: _statusColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(_statusIcon, color: _statusColor, size: 18),
+                  ),
+                  const SizedBox(width: 10),
                   Text('Cuota #${payment.paymentNumber}',
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
@@ -244,7 +256,7 @@ class _PaymentTile extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -258,7 +270,9 @@ class _PaymentTile extends StatelessWidget {
                     Text(
                       '+ ${currency.format(payment.penaltyAmount)} sanción',
                       style: const TextStyle(
-                          color: AppColors.danger, fontSize: 12),
+                          color: AppColors.danger,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600),
                     ),
                 ],
               ),
