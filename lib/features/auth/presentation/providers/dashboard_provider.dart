@@ -57,16 +57,20 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       .where('status', isEqualTo: 'defaulted')
       .get();
 
-  // Pagos cobrados (todos los pagados)
+  // Pagos cobrados (paid, early y late — todos los que ya se cobraron)
   final paymentsSnap = await firestore
       .collection('payments')
       .where('adminId', isEqualTo: adminId)
-      .where('status', isEqualTo: 'paid')
-      .get();
+      .where('status', whereIn: ['paid', 'early', 'late']).get();
 
   final totalCollected = paymentsSnap.docs.fold<double>(
     0,
-    (sum, doc) => sum + (doc.data()['amount'] as num).toDouble(),
+    (sum, doc) {
+      final data = doc.data();
+      final amount = (data['amount'] as num?)?.toDouble() ?? 0;
+      final penalty = (data['penaltyAmount'] as num?)?.toDouble() ?? 0;
+      return sum + amount + penalty;
+    },
   );
 
   // Pagos pendientes de hoy
