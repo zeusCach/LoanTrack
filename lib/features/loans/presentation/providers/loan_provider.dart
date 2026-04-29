@@ -64,6 +64,13 @@ class LoanNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final loan = await _createLoan(params);
 
+      await _notifications.showLoanCreated(
+        loanId: loan.id,
+        clientName: clientName ?? 'cliente',
+        totalAmount: loan.totalAmount,
+        totalPayments: params.totalPayments,
+      );
+
       final frequency = LoanModelFrequencyMapper.fromString(params.frequency);
       final generatedPayments = LoanCalculator.generatePayments(
         loanId: loan.id,

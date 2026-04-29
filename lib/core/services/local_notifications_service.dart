@@ -15,11 +15,16 @@ class LocalNotificationsService {
 
   bool _initialized = false;
 
+  static const String _channelId = 'loantrack_channel';
+  static const String _channelName = 'LoanTrack notifications';
+  static const String _channelDescription =
+      'Recordatorios y eventos de préstamos';
+
   static const AndroidNotificationDetails _androidBaseDetails =
       AndroidNotificationDetails(
-    'loantrack_notifications',
-    'LoanTrack notifications',
-    channelDescription: 'Recordatorios y eventos de préstamos',
+    _channelId,
+    _channelName,
+    channelDescription: _channelDescription,
     importance: Importance.max,
     priority: Priority.high,
   );
@@ -33,7 +38,11 @@ class LocalNotificationsService {
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
     );
-    const iosSettings = DarwinInitializationSettings();
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
 
     await _plugin.initialize(
       const InitializationSettings(
@@ -42,14 +51,30 @@ class LocalNotificationsService {
       ),
     );
 
+    await _createAndroidChannel();
     await requestPermissions();
     _initialized = true;
+    _log('initialized OK (channel=$_channelId, tz=${tz.local.name})');
+  }
+
+  Future<void> _createAndroidChannel() async {
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin == null) return;
+    const channel = AndroidNotificationChannel(
+      _channelId,
+      _channelName,
+      description: _channelDescription,
+      importance: Importance.max,
+    );
+    await androidPlugin.createNotificationChannel(channel);
   }
 
   Future<void> requestPermissions() async {
     final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
-    await androidPlugin?.requestNotificationsPermission();
+    final granted = await androidPlugin?.requestNotificationsPermission();
+    _log('android POST_NOTIFICATIONS permission granted=$granted');
 
     final iosPlugin = _plugin
         .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
@@ -57,6 +82,26 @@ class LocalNotificationsService {
       alert: true,
       badge: true,
       sound: true,
+    );
+  }
+
+  Future<void> showLoanCreated({
+    required String loanId,
+    required String clientName,
+    required double totalAmount,
+    required int totalPayments,
+  }) async {
+    await initialize();
+    _log('showLoanCreated loan=$loanId client=$clientName');
+    await _plugin.show(
+      _notificationIdFromString('loan_$loanId'),
+      'Préstamo creado',
+      'Préstamo de \$${totalAmount.toStringAsFixed(2)} para $clientName ($totalPayments cuotas).',
+      const NotificationDetails(
+        android: _androidBaseDetails,
+        iOS: DarwinNotificationDetails(),
+      ),
+      payload: 'loan:$loanId',
     );
   }
 
@@ -72,8 +117,13 @@ class LocalNotificationsService {
     final scheduleDate = expectedDate.subtract(const Duration(days: 1));
     final now = DateTime.now();
 
-    if (!scheduleDate.isAfter(now)) return;
+    if (!scheduleDate.isAfter(now)) {
+      _log(
+          'skip schedule reminder loan=$loanId #$paymentNumber (date $scheduleDate not in future)');
+      return;
+    }
 
+    _log('scheduling reminder loan=$loanId #$paymentNumber at $scheduleDate');
     await _plugin.zonedSchedule(
       _notificationIdForReminder(loanId, paymentNumber),
       'Cuota próxima a vencer',
@@ -94,6 +144,7 @@ class LocalNotificationsService {
     required double amount,
   }) async {
     await initialize();
+    _log('showPaymentRegistered payment=$paymentId #$paymentNumber');
     await _plugin.show(
       _notificationIdFromString('paid_$paymentId'),
       'Pago registrado',
@@ -112,6 +163,7 @@ class LocalNotificationsService {
     required double penaltyAmount,
   }) async {
     await initialize();
+    _log('showPenaltyApplied payment=$paymentId #$paymentNumber');
     await _plugin.show(
       _notificationIdFromString('penalty_$paymentId'),
       'Sanción aplicada',
@@ -141,10 +193,14 @@ class LocalNotificationsService {
       final timezoneName = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(timezoneName));
     } catch (_) {
-      if (kDebugMode) {
-        debugPrint('No se pudo obtener zona horaria local, se usa UTC.');
-      }
+      _log('No se pudo obtener zona horaria local, se usa UTC.');
       tz.setLocalLocation(tz.getLocation('UTC'));
+    }
+  }
+
+  void _log(String message) {
+    if (kDebugMode) {
+      debugPrint('[LocalNotifications] $message');
     }
   }
 }
