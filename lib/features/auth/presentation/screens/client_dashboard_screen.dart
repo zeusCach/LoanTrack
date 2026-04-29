@@ -11,6 +11,7 @@ import '../../../payments/domain/entities/payment_entity.dart';
 import '../../../payments/presentation/providers/payment_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/client_dashboard_provider.dart';
+import '../providers/logout.dart';
 
 class ClientDashboardScreen extends ConsumerStatefulWidget {
   const ClientDashboardScreen({super.key});
@@ -64,7 +65,7 @@ class _ClientDashboardScreenState extends ConsumerState<ClientDashboardScreen> {
         title: Text('Mi panel · ${user.name}'),
         actions: [
           IconButton(
-            onPressed: () => ref.read(authRepositoryProvider).logout(),
+            onPressed: () => performLogout(ref),
             icon: const Icon(Icons.logout),
           ),
         ],

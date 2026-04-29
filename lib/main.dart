@@ -7,6 +7,7 @@ import 'core/constants/app_routes.dart';
 import 'core/constants/app_strings.dart';
 import 'firebase_options.dart';
 import 'core/services/local_notifications_service.dart';
+import 'core/widgets/notification_permission_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,9 @@ class LoanTrackApp extends ConsumerWidget {
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
       routerConfig: router,
+      builder: (context, child) => NotificationPermissionGate(
+        child: child ?? const SizedBox.shrink(),
+      ),
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

@@ -70,6 +70,26 @@ class LocalNotificationsService {
     await androidPlugin.createNotificationChannel(channel);
   }
 
+  /// Devuelve si las notificaciones están habilitadas a nivel sistema.
+  /// En Android, aunque otorgues `POST_NOTIFICATIONS`, el usuario puede
+  /// desactivar notificaciones de la app desde Ajustes — eso bloquea todas
+  /// las notificaciones aunque `_plugin.show()` se ejecute sin error.
+  Future<bool> areNotificationsEnabled() async {
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin != null) {
+      final enabled = await androidPlugin.areNotificationsEnabled();
+      return enabled ?? false;
+    }
+    final iosPlugin = _plugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+    if (iosPlugin != null) {
+      final result = await iosPlugin.checkPermissions();
+      return result?.isEnabled ?? false;
+    }
+    return true;
+  }
+
   Future<void> requestPermissions() async {
     final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
