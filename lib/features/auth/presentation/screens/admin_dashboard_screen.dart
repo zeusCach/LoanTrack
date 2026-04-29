@@ -8,6 +8,8 @@ import '../providers/auth_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/logout.dart';
 
+const _highlightBg = Color(0xFF1A237E);
+
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
 
@@ -73,7 +75,8 @@ class AdminDashboardScreen extends ConsumerWidget {
                           label: 'Clientes',
                           value: '${stats.totalClients}',
                           icon: Icons.people_rounded,
-                          color: AppColors.primary,
+                          color: _highlightBg,
+                          highlight: true,
                         ),
                         const SizedBox(width: 12),
                         _StatCard(
@@ -118,47 +121,6 @@ class AdminDashboardScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-
-              const SizedBox(height: 28),
-
-              // Acciones rápidas
-              const Text('Acciones rápidas',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.6,
-                children: [
-                  _ActionCard(
-                    label: 'Clientes',
-                    icon: Icons.people_outline_rounded,
-                    color: AppColors.primary,
-                    onTap: () => context.push('/admin/clients'),
-                  ),
-                  _ActionCard(
-                    label: 'Préstamos',
-                    icon: Icons.account_balance_wallet_outlined,
-                    color: AppColors.success,
-                    onTap: () => context.push('/admin/loans'),
-                  ),
-                  _ActionCard(
-                    label: 'Pagos',
-                    icon: Icons.payments_outlined,
-                    color: AppColors.warning,
-                    onTap: () => context.push('/admin/payments'),
-                  ),
-                  _ActionCard(
-                    label: 'Reportes',
-                    icon: Icons.bar_chart_rounded,
-                    color: AppColors.secondary,
-                    onTap: () => context.push('/admin/reports'),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -174,65 +136,80 @@ class _StatCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final bool highlight;
 
   const _StatCard({
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
+    this.highlight = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = highlight ? color : Colors.white;
+    final iconBg = highlight
+        ? Colors.white.withOpacity(0.18)
+        : color.withOpacity(0.15);
+    final iconColor = highlight ? Colors.white : color;
+    final valueColor = highlight ? Colors.white : color;
+    final labelColor =
+        highlight ? Colors.white.withOpacity(0.85) : AppColors.textSecondary;
+
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade100),
+          color: bgColor,
+          borderRadius: BorderRadius.circular(14),
+          border: highlight
+              ? null
+              : Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: highlight
+                  ? color.withOpacity(0.25)
+                  : Colors.black.withOpacity(0.04),
+              blurRadius: highlight ? 12 : 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: iconBg,
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: iconColor, size: 18),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      value,
-                      style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: color),
-                    ),
-                  ),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                        fontSize: 11, color: AppColors.textSecondary),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+            const SizedBox(height: 14),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: labelColor,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                  color: valueColor,
+                ),
               ),
             ),
           ],
@@ -474,54 +451,3 @@ class _SheetAction extends StatelessWidget {
   }
 }
 
-class _ActionCard extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionCard({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(height: 8),
-            Text(label,
-                style:
-                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-          ],
-        ),
-      ),
-    );
-  }
-}

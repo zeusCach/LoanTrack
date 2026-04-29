@@ -40,39 +40,86 @@ class ClientPaymentsScreen extends ConsumerWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (_, i) {
               final payment = payments[i];
+              final color = _statusColor(payment.status);
               return Container(
-                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _statusColor(payment.status).withOpacity(0.3)),
+                  border: Border(
+                    left: BorderSide(color: color, width: 4),
+                    top: BorderSide(color: Colors.grey.shade200),
+                    right: BorderSide(color: Colors.grey.shade200),
+                    bottom: BorderSide(color: Colors.grey.shade200),
+                  ),
                 ),
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Cuota #${payment.paymentNumber}',
-                            style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(_statusIcon(payment.status),
+                                  color: color, size: 18),
+                            ),
+                            const SizedBox(width: 10),
+                            Text('Cuota #${payment.paymentNumber}',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
                         _StatusChip(status: payment.status),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
                     Text(currency.format(payment.amount),
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text('Vence: ${dateFormat.format(payment.expectedDate)}'),
-                    if (payment.paidDate != null)
-                      Text('Pago: ${dateFormat.format(payment.paidDate!)}'),
-                    if (payment.method != null)
-                      Text(payment.method == PaymentMethod.cash
-                          ? 'Método: Efectivo'
-                          : 'Método: Transferencia'),
                     if (payment.penaltyAmount > 0)
                       Text(
-                        'Sanción: ${currency.format(payment.penaltyAmount)} (${payment.penaltyReason})',
-                        style: const TextStyle(color: AppColors.danger),
+                        '+ ${currency.format(payment.penaltyAmount)} sanción',
+                        style: const TextStyle(
+                            color: AppColors.danger,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Vence: ${dateFormat.format(payment.expectedDate)}',
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                    if (payment.paidDate != null)
+                      Text(
+                        'Pagado: ${dateFormat.format(payment.paidDate!)}',
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.success),
+                      ),
+                    if (payment.method != null)
+                      Text(
+                        payment.method == PaymentMethod.cash
+                            ? 'Método: Efectivo'
+                            : 'Método: Transferencia',
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    if (payment.penaltyReason.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          'Motivo: ${payment.penaltyReason}',
+                          style: const TextStyle(
+                              fontSize: 12, color: AppColors.danger),
+                        ),
                       ),
                   ],
                 ),
@@ -112,13 +159,25 @@ class _StatusChip extends StatelessWidget {
 Color _statusColor(PaymentStatus status) {
   switch (status) {
     case PaymentStatus.paid:
-      return AppColors.success;
     case PaymentStatus.early:
-      return AppColors.primary;
+      return AppColors.success;
     case PaymentStatus.late:
       return AppColors.danger;
     case PaymentStatus.pending:
       return AppColors.warning;
+  }
+}
+
+IconData _statusIcon(PaymentStatus status) {
+  switch (status) {
+    case PaymentStatus.paid:
+      return Icons.check_circle_rounded;
+    case PaymentStatus.early:
+      return Icons.arrow_circle_up_rounded;
+    case PaymentStatus.late:
+      return Icons.warning_rounded;
+    case PaymentStatus.pending:
+      return Icons.radio_button_unchecked;
   }
 }
 
