@@ -6,7 +6,9 @@ import '../../features/auth/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/auth/presentation/screens/client_dashboard_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/clients/presentation/screens/clients_screen.dart';
+import '../../features/loans/presentation/screens/admin_loans_screen.dart';
 import '../../features/loans/presentation/screens/client_loans_status_screen.dart';
+import '../../features/payments/presentation/screens/admin_payments_screen.dart';
 import '../../features/payments/presentation/screens/client_payments_screen.dart';
 
 class _PlaceholderScreen extends StatelessWidget {
@@ -61,6 +63,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/clients/:clientId',
         builder: (_, s) => _PlaceholderScreen('Cliente ${s.pathParameters['clientId']}'),
+      ),
+      GoRoute(
+        path: '/admin/loans',
+        builder: (_, __) => const AdminLoansScreen(),
+      ),
+      GoRoute(
+        path: '/admin/payments',
+        builder: (_, __) => const AdminPaymentsScreen(),
       ),
       GoRoute(
         path: '/admin/loans/new',
