@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
@@ -10,16 +9,8 @@ import '../../features/loans/presentation/screens/admin_loans_screen.dart';
 import '../../features/loans/presentation/screens/client_loans_status_screen.dart';
 import '../../features/payments/presentation/screens/admin_payments_screen.dart';
 import '../../features/payments/presentation/screens/client_payments_screen.dart';
-
-class _PlaceholderScreen extends StatelessWidget {
-  final String name;
-  const _PlaceholderScreen(this.name);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(body: Center(child: Text(name)));
-  }
-}
+import '../../features/reports/presentation/screens/admin_reports_screen.dart';
+import '../widgets/entity_loaders.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -62,7 +53,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/admin/clients/:clientId',
-        builder: (_, s) => _PlaceholderScreen('Cliente ${s.pathParameters['clientId']}'),
+        builder: (_, s) =>
+            ClientDetailRoute(clientId: s.pathParameters['clientId']!),
       ),
       GoRoute(
         path: '/admin/loans',
@@ -74,15 +66,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/admin/loans/new',
-        builder: (_, __) => const _PlaceholderScreen('Nuevo Préstamo'),
+        builder: (_, __) => const CreateLoanRoute(),
       ),
       GoRoute(
         path: '/admin/loans/:loanId',
-        builder: (_, __) => const _PlaceholderScreen('Loan Detail'),
+        builder: (_, s) =>
+            LoanDetailRoute(loanId: s.pathParameters['loanId']!),
       ),
       GoRoute(
         path: '/admin/reports',
-        builder: (_, __) => const _PlaceholderScreen('Reportes'),
+        builder: (_, __) => const AdminReportsScreen(),
       ),
 
       // Client
