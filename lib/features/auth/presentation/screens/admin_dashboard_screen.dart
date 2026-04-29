@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -107,6 +108,12 @@ class AdminDashboardScreen extends ConsumerWidget {
                     _TotalCard(
                       label: 'Total cobrado',
                       value: currencyFormat.format(stats.totalCollected),
+                      rawAmount: stats.totalCollected,
+                      onTap: () => _showTotalCollectedSheet(
+                        context,
+                        stats.totalCollected,
+                        currencyFormat,
+                      ),
                     ),
                   ],
                 ),
@@ -238,48 +245,230 @@ class _StatCard extends StatelessWidget {
 class _TotalCard extends StatelessWidget {
   final String label;
   final String value;
+  final double rawAmount;
+  final VoidCallback onTap;
 
-  const _TotalCard({required this.label, required this.value});
+  const _TotalCard({
+    required this.label,
+    required this.value,
+    required this.rawAmount,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, Color(0xFF1D4ED8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+    final borderRadius = BorderRadius.circular(16);
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.primary, Color(0xFF1D4ED8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
+          borderRadius: borderRadius,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: InkWell(
+          borderRadius: borderRadius,
+          onTap: onTap,
+          onLongPress: () async {
+            await Clipboard.setData(
+                ClipboardData(text: rawAmount.toStringAsFixed(2)));
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Monto copiado al portapapeles'),
+                duration: Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(label,
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 13)),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.touch_app_rounded,
+                              color: Colors.white54, size: 14),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(value,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Toca para ver detalles · Mantén para copiar',
+                        style:
+                            TextStyle(color: Colors.white60, fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.account_balance_wallet_rounded,
+                    color: Colors.white54, size: 40),
+              ],
+            ),
+          ),
+        ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
+    );
+  }
+}
+
+void _showTotalCollectedSheet(
+  BuildContext context,
+  double totalCollected,
+  NumberFormat currencyFormat,
+) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (sheetContext) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Total cobrado',
+                  style:
+                      TextStyle(fontSize: 14, color: AppColors.textSecondary)),
               const SizedBox(height: 4),
-              Text(value,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                currencyFormat.format(totalCollected),
+                style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Suma de todos los pagos marcados como pagados.',
+                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 20),
+              _SheetAction(
+                icon: Icons.bar_chart_rounded,
+                label: 'Ver reportes',
+                color: AppColors.secondary,
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  context.push('/admin/reports');
+                },
+              ),
+              const SizedBox(height: 10),
+              _SheetAction(
+                icon: Icons.payments_outlined,
+                label: 'Ver pagos cobrados',
+                color: AppColors.success,
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  context.push('/admin/payments');
+                },
+              ),
+              const SizedBox(height: 10),
+              _SheetAction(
+                icon: Icons.copy_rounded,
+                label: 'Copiar monto',
+                color: AppColors.primary,
+                onTap: () async {
+                  await Clipboard.setData(
+                      ClipboardData(text: totalCollected.toStringAsFixed(2)));
+                  if (!sheetContext.mounted) return;
+                  Navigator.of(sheetContext).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Monto copiado al portapapeles'),
+                      duration: Duration(seconds: 2),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
             ],
           ),
-          const Icon(Icons.account_balance_wallet_rounded,
-              color: Colors.white54, size: 40),
-        ],
+        ),
+      );
+    },
+  );
+}
+
+class _SheetAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _SheetAction({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(label,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600)),
+            ),
+            Icon(Icons.chevron_right_rounded, color: color),
+          ],
+        ),
       ),
     );
   }
