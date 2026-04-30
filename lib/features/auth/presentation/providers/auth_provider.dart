@@ -4,9 +4,6 @@ import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../../domain/usecases/login_usecase.dart';
-import '../../domain/usecases/logout_usecase.dart';
-import '../../domain/usecases/get_current_user_usecase.dart';
 
 // Datasource
 final authDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
@@ -19,19 +16,6 @@ final authDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
 // Repository
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(ref.watch(authDataSourceProvider));
-});
-
-// Usecases
-final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
-  return LoginUseCase(ref.watch(authRepositoryProvider));
-});
-
-final logoutUseCaseProvider = Provider<LogoutUseCase>((ref) {
-  return LogoutUseCase(ref.watch(authRepositoryProvider));
-});
-
-final getCurrentUserUseCaseProvider = Provider<GetCurrentUserUseCase>((ref) {
-  return GetCurrentUserUseCase(ref.watch(authRepositoryProvider));
 });
 
 // Estado de sesión — stream principal

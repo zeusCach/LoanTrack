@@ -156,12 +156,12 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bgColor = highlight ? color : Colors.white;
     final iconBg = highlight
-        ? Colors.white.withOpacity(0.18)
-        : color.withOpacity(0.15);
+        ? Colors.white.withValues(alpha: 0.18)
+        : color.withValues(alpha: 0.15);
     final iconColor = highlight ? Colors.white : color;
     final valueColor = highlight ? Colors.white : color;
     final labelColor =
-        highlight ? Colors.white.withOpacity(0.85) : AppColors.textSecondary;
+        highlight ? Colors.white.withValues(alpha: 0.85) : AppColors.textSecondary;
 
     return Expanded(
       child: Container(
@@ -175,8 +175,8 @@ class _StatCard extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: highlight
-                  ? color.withOpacity(0.25)
-                  : Colors.black.withOpacity(0.04),
+                  ? color.withValues(alpha: 0.25)
+                  : Colors.black.withValues(alpha: 0.04),
               blurRadius: highlight ? 12 : 8,
               offset: const Offset(0, 3),
             ),
@@ -253,7 +253,7 @@ class _TotalCard extends StatelessWidget {
           borderRadius: borderRadius,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.3),
+              color: AppColors.primary.withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -437,7 +437,7 @@ class _SheetAction extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

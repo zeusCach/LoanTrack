@@ -4,25 +4,22 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../clients/domain/entities/client_entity.dart';
 import '../../../clients/presentation/providers/client_provider.dart';
-import '../../../loans/presentation/providers/loan_provider.dart';
 import '../../domain/entities/payment_entity.dart';
 import '../providers/payment_provider.dart';
 import 'register_payment_screen.dart';
 
 /// Lista las cuotas con `status: pending` cuya fecha esperada es hoy o
-/// anterior (atrasadas). Combina `adminLoansProvider` con
-/// `loanPaymentsProvider` por cada préstamo activo.
+/// anterior (atrasadas). Usa una única consulta a Firestore vía
+/// `dueAdminPaymentsProvider`.
 class AdminPaymentsScreen extends ConsumerWidget {
   const AdminPaymentsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final loansAsync = ref.watch(adminLoansProvider);
+    final paymentsAsync = ref.watch(dueAdminPaymentsProvider);
     final clientsAsync = ref.watch(clientsStreamProvider);
     final currency = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
     final dateFormat = DateFormat('dd/MM/yyyy');
-    final today = DateTime.now();
-    final endOfToday = DateTime(today.year, today.month, today.day, 23, 59, 59);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -31,54 +28,16 @@ class AdminPaymentsScreen extends ConsumerWidget {
         foregroundColor: Colors.white,
         title: const Text('Pagos del día'),
       ),
-      body: loansAsync.when(
+      body: paymentsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (loans) {
+        data: (payments) {
           final clientsById = <String, String>{
             for (final c in clientsAsync.value ?? const <ClientEntity>[])
               c.uid: c.name,
           };
-          if (loans.isEmpty) {
-            return const Center(
-              child: Text(
-                'No hay préstamos registrados',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            );
-          }
 
-          // Agregamos los pagos pendientes (vencen hoy o antes) de cada préstamo.
-          final tiles = <_DuePaymentTile>[];
-          var stillLoading = false;
-
-          for (final loan in loans) {
-            final paymentsAsync = ref.watch(loanPaymentsProvider(loan.id));
-            paymentsAsync.when(
-              loading: () => stillLoading = true,
-              error: (_, __) {},
-              data: (payments) {
-                for (final p in payments) {
-                  if (p.status != PaymentStatus.pending) continue;
-                  if (p.expectedDate.isAfter(endOfToday)) continue;
-                  tiles.add(_DuePaymentTile(
-                    payment: p,
-                    clientName: clientsById[p.clientId] ?? 'Cliente',
-                    currency: currency,
-                    dateFormat: dateFormat,
-                  ));
-                }
-              },
-            );
-          }
-
-          tiles.sort((a, b) => a.payment.expectedDate
-              .compareTo(b.payment.expectedDate));
-
-          if (tiles.isEmpty) {
-            if (stillLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+          if (payments.isEmpty) {
             return const Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
@@ -93,9 +52,17 @@ class AdminPaymentsScreen extends ConsumerWidget {
 
           return ListView.separated(
             padding: const EdgeInsets.all(16),
-            itemCount: tiles.length,
+            itemCount: payments.length,
             separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (_, i) => tiles[i],
+            itemBuilder: (_, i) {
+              final p = payments[i];
+              return _DuePaymentTile(
+                payment: p,
+                clientName: clientsById[p.clientId] ?? 'Cliente',
+                currency: currency,
+                dateFormat: dateFormat,
+              );
+            },
           );
         },
       ),
@@ -137,7 +104,7 @@ class _DuePaymentTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,7 +125,7 @@ class _DuePaymentTile extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.12),
+                    color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(

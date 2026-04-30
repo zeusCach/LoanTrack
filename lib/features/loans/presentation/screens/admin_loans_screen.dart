@@ -9,7 +9,6 @@ import '../../../payments/domain/entities/payment_entity.dart';
 import '../../../payments/presentation/providers/payment_provider.dart';
 import '../../domain/entities/loan_entity.dart';
 import '../providers/loan_provider.dart';
-import 'loan_detail_screen.dart';
 
 class AdminLoansScreen extends ConsumerWidget {
   const AdminLoansScreen({super.key});
@@ -185,11 +184,7 @@ class _LoanCard extends ConsumerWidget {
     );
 
     return InkWell(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => LoanDetailScreen(loan: loan),
-        ),
-      ),
+      onTap: () => context.push('/admin/loans/${loan.id}'),
       borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -217,7 +212,7 @@ class _LoanCard extends ConsumerWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: _statusColor.withOpacity(0.12),
+                    color: _statusColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(

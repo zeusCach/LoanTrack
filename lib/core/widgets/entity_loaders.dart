@@ -121,7 +121,7 @@ class CreateLoanRoute extends ConsumerWidget {
               final c = active[i];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                   child: Text(
                     c.name.isNotEmpty ? c.name[0].toUpperCase() : '?',
                     style: const TextStyle(color: AppColors.primary),

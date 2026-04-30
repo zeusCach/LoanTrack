@@ -1,8 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../../../../core/services/local_notifications_service.dart';
 import '../../../../shared/providers/firebase_providers.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/datasources/payment_remote_datasource.dart';
+import '../../data/models/payment_model.dart';
 import '../../data/repositories/payment_repository_impl.dart';
 import '../../domain/entities/payment_entity.dart';
 import '../../domain/repositories/payment_repository.dart';
@@ -51,6 +54,29 @@ final loanPaymentsProvider =
 final clientPaymentsProvider =
     StreamProvider.family<List<PaymentEntity>, String>((ref, clientId) {
   return ref.watch(getPaymentsByClientProvider)(clientId);
+});
+
+// Stream de pagos pendientes/atrasados del admin actual (para "Pagos del día").
+// Una sola consulta a Firestore en lugar de N suscripciones por préstamo.
+final dueAdminPaymentsProvider =
+    StreamProvider<List<PaymentEntity>>((ref) {
+  final user = ref.watch(authStateProvider).value;
+  if (user == null) return const Stream.empty();
+
+  final firestore = ref.watch(firestoreProvider);
+  final today = DateTime.now();
+  final endOfToday = DateTime(today.year, today.month, today.day, 23, 59, 59);
+
+  return firestore
+      .collection('payments')
+      .where('adminId', isEqualTo: user.uid)
+      .where('status', isEqualTo: 'pending')
+      .where('expectedDate',
+          isLessThanOrEqualTo: Timestamp.fromDate(endOfToday))
+      .orderBy('expectedDate')
+      .snapshots()
+      .map((snap) =>
+          snap.docs.map((d) => PaymentModel.fromFirestore(d).toEntity()).toList());
 });
 
 // Notifier
