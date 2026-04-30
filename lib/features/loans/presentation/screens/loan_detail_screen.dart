@@ -314,8 +314,7 @@ class _PaymentTile extends StatelessWidget {
               ),
             ),
           // Acciones
-          if (onRegister != null || true)
-            Padding(
+          Padding(
               padding: const EdgeInsets.only(top: 12),
               child: Row(
                 children: [

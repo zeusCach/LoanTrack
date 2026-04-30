@@ -3,7 +3,6 @@ import 'package:loantrack/features/loans/domain/entities/loan_entity.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/utils/loan_calculator.dart';
-import '../../../payments/data/models/payment_model.dart';
 import '../models/loan_model.dart';
 
 abstract class LoanRemoteDataSource {
