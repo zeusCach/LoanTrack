@@ -10,6 +10,7 @@ abstract class AuthRemoteDataSource {
   Future<void> sendPasswordResetEmail(String email);
   Future<void> updateUserName({required String uid, required String name});
   Stream<User?> get authStateChanges;
+  User? get currentUser;
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -24,6 +25,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  @override
+  User? get currentUser => _auth.currentUser;
 
   @override
   Future<UserModel> login(String email, String password) async {

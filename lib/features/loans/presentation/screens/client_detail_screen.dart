@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:loantrack/features/loans/presentation/screens/loan_detail_screen.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../clients/domain/entities/client_entity.dart';
@@ -268,12 +268,8 @@ class ClientDetailScreen extends ConsumerWidget {
                   itemBuilder: (_, i) {
                     final loan = loans[i];
                     return GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => LoanDetailScreen(loan: loans[i]),
-                        ),
-                      ),
+                      onTap: () =>
+                          context.push('/admin/loans/${loan.id}'),
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -298,7 +294,7 @@ class ClientDetailScreen extends ConsumerWidget {
                                       horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: _statusColor(loan.status)
-                                        .withOpacity(0.1),
+                                        .withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(

@@ -25,10 +25,9 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserEntity?> getCurrentUser() async {
     try {
-      final firebaseUser = _dataSource.authStateChanges.first;
-      final user = await firebaseUser;
-      if (user == null) return null;
-      return await _dataSource.getCurrentUser(user.uid);
+      final firebaseUser = _dataSource.currentUser;
+      if (firebaseUser == null) return null;
+      return await _dataSource.getCurrentUser(firebaseUser.uid);
     } catch (_) {
       return null;
     }

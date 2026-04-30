@@ -213,7 +213,7 @@ class AdminReportsScreen extends ConsumerWidget {
                         ListTile(
                           leading: CircleAvatar(
                             backgroundColor:
-                                AppColors.danger.withOpacity(0.1),
+                                AppColors.danger.withValues(alpha: 0.1),
                             child: Text(
                               '${i + 1}',
                               style: const TextStyle(
@@ -292,7 +292,7 @@ class _StatCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: color, size: 16),

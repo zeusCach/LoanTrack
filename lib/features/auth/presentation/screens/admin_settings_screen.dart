@@ -22,29 +22,33 @@ class AdminSettingsScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
           const _SectionHeader('Apariencia'),
-          _ThemeOption(
-            label: 'Sistema',
-            description: 'Sigue la configuración del dispositivo',
-            mode: ThemeMode.system,
-            current: themeMode,
-            icon: Icons.brightness_auto_rounded,
-            onSelect: (m) => ref.read(themeModeProvider.notifier).set(m),
-          ),
-          _ThemeOption(
-            label: 'Claro',
-            description: 'Tema predeterminado',
-            mode: ThemeMode.light,
-            current: themeMode,
-            icon: Icons.light_mode_rounded,
-            onSelect: (m) => ref.read(themeModeProvider.notifier).set(m),
-          ),
-          _ThemeOption(
-            label: 'Oscuro',
-            description: 'Reduce el brillo en ambientes oscuros',
-            mode: ThemeMode.dark,
-            current: themeMode,
-            icon: Icons.dark_mode_rounded,
-            onSelect: (m) => ref.read(themeModeProvider.notifier).set(m),
+          RadioGroup<ThemeMode>(
+            groupValue: themeMode,
+            onChanged: (m) {
+              if (m != null) ref.read(themeModeProvider.notifier).set(m);
+            },
+            child: const Column(
+              children: [
+                _ThemeOption(
+                  label: 'Sistema',
+                  description: 'Sigue la configuración del dispositivo',
+                  mode: ThemeMode.system,
+                  icon: Icons.brightness_auto_rounded,
+                ),
+                _ThemeOption(
+                  label: 'Claro',
+                  description: 'Tema predeterminado',
+                  mode: ThemeMode.light,
+                  icon: Icons.light_mode_rounded,
+                ),
+                _ThemeOption(
+                  label: 'Oscuro',
+                  description: 'Reduce el brillo en ambientes oscuros',
+                  mode: ThemeMode.dark,
+                  icon: Icons.dark_mode_rounded,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 8),
           const _SectionHeader('Mi perfil'),
@@ -220,27 +224,19 @@ class _ThemeOption extends StatelessWidget {
   final String label;
   final String description;
   final ThemeMode mode;
-  final ThemeMode current;
   final IconData icon;
-  final ValueChanged<ThemeMode> onSelect;
 
   const _ThemeOption({
     required this.label,
     required this.description,
     required this.mode,
-    required this.current,
     required this.icon,
-    required this.onSelect,
   });
 
   @override
   Widget build(BuildContext context) {
     return RadioListTile<ThemeMode>(
       value: mode,
-      groupValue: current,
-      onChanged: (v) {
-        if (v != null) onSelect(v);
-      },
       title: Row(
         children: [
           Icon(icon, size: 20, color: AppColors.textSecondary),

@@ -149,10 +149,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
+                  color: Colors.white.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                   border: Border.all(
-                      color: Colors.white.withOpacity(0.25), width: 1.5),
+                      color: Colors.white.withValues(alpha: 0.25), width: 1.5),
                 ),
                 child: const Icon(
                   Icons.account_balance_wallet_rounded,
@@ -226,7 +226,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         Text(
                           'Inicia sesión para continuar',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 14,
                           ),
                         ),
@@ -339,7 +339,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: _gradientEnd.withOpacity(0.35),
+              color: _gradientEnd.withValues(alpha: 0.35),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
