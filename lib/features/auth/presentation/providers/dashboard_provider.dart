@@ -21,7 +21,7 @@ class DashboardStats {
 
 final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
   final user = ref.read(authStateProvider).value;
-  if (user == null)
+  if (user == null) {
     return const DashboardStats(
       totalClients: 0,
       activeLoans: 0,
@@ -29,6 +29,7 @@ final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
       totalCollected: 0,
       pendingPaymentsToday: 0,
     );
+  }
 
   final firestore = ref.read(firestoreProvider);
   final adminId = user.uid;
