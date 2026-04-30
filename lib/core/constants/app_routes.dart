@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/auth/presentation/screens/admin_settings_screen.dart';
 import '../../features/auth/presentation/screens/client_dashboard_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/clients/presentation/screens/clients_screen.dart';
@@ -93,6 +94,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/admin/loans/:loanId',
         builder: (_, s) =>
             LoanDetailRoute(loanId: s.pathParameters['loanId']!),
+      ),
+      GoRoute(
+        path: '/admin/settings',
+        builder: (_, __) => const AdminSettingsScreen(),
       ),
 
       // Client

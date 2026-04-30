@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_colors.dart';
 import 'core/constants/app_routes.dart';
 import 'core/constants/app_strings.dart';
+import 'core/theme/theme_provider.dart';
 import 'firebase_options.dart';
 import 'core/services/local_notifications_service.dart';
 import 'core/widgets/notification_permission_gate.dart';
@@ -23,6 +24,7 @@ class LoanTrackApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: AppStrings.appName,
@@ -31,6 +33,7 @@ class LoanTrackApp extends ConsumerWidget {
       builder: (context, child) => NotificationPermissionGate(
         child: child ?? const SizedBox.shrink(),
       ),
+      themeMode: themeMode,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -38,6 +41,14 @@ class LoanTrackApp extends ConsumerWidget {
           background: AppColors.background,
         ),
         scaffoldBackgroundColor: AppColors.background,
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          brightness: Brightness.dark,
+        ),
       ),
     );
   }

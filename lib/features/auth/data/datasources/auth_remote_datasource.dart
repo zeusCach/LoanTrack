@@ -7,6 +7,8 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
   Future<UserModel> getCurrentUser(String uid);
   Future<void> logout();
+  Future<void> sendPasswordResetEmail(String email);
+  Future<void> updateUserName({required String uid, required String name});
   Stream<User?> get authStateChanges;
 }
 
@@ -50,6 +52,31 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout() async {
     await _auth.signOut();
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapFirebaseError(e.code));
+    }
+  }
+
+  @override
+  Future<void> updateUserName({
+    required String uid,
+    required String name,
+  }) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      throw AuthException('El nombre no puede estar vacío');
+    }
+    try {
+      await _firestore.collection('users').doc(uid).update({'name': trimmed});
+    } catch (_) {
+      throw AuthException('No se pudo actualizar el nombre');
+    }
   }
 
   String _mapFirebaseError(String code) {
