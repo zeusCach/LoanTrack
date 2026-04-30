@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:loantrack/features/loans/presentation/screens/client_detail_screen.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/client_provider.dart';

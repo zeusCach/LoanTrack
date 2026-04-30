@@ -6,7 +6,6 @@ import '../../../../core/utils/loan_calculator.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/loan_provider.dart';
 import '../../domain/usecases/create_loan_usecase.dart';
-import '../../../loans/domain/entities/loan_entity.dart';
 
 class CreateLoanScreen extends ConsumerStatefulWidget {
   final String clientId;
