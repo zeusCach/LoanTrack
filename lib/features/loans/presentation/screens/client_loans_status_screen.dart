@@ -5,8 +5,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../payments/domain/entities/payment_entity.dart';
 import '../../../payments/presentation/providers/payment_provider.dart';
-import '../../domain/entities/loan_entity.dart';
-import '../providers/loan_provider.dart';
 
 class ClientLoansStatusScreen extends ConsumerWidget {
   const ClientLoansStatusScreen({super.key});
@@ -18,28 +16,42 @@ class ClientLoansStatusScreen extends ConsumerWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final loansAsync = ref.watch(clientLoansProvider(user.uid));
+    final paymentsAsync = ref.watch(clientPaymentsProvider(user.uid));
     final currency = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final dateFormat = DateFormat('dd MMM yyyy', 'es');
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Estado del préstamo'),
+        title: const Text('Historial'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
-      body: loansAsync.when(
+      body: paymentsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (loans) {
-          if (loans.isEmpty) {
-            return const Center(child: Text('No tienes préstamos activos.'));
+        data: (payments) {
+          if (payments.isEmpty) {
+            return const Center(
+              child: Text('Sin movimientos registrados'),
+            );
           }
+          // Orden cronológico ascendente (más antiguo arriba).
+          final sorted = [...payments]
+            ..sort((a, b) => a.expectedDate.compareTo(b.expectedDate));
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: loans.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (_, i) => _LoanProgressCard(loan: loans[i], currency: currency),
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            itemCount: sorted.length,
+            itemBuilder: (_, i) {
+              return _TimelineEntry(
+                payment: sorted[i],
+                currency: currency,
+                dateFormat: dateFormat,
+                isFirst: i == 0,
+                isLast: i == sorted.length - 1,
+              );
+            },
           );
         },
       ),
@@ -47,54 +59,176 @@ class ClientLoansStatusScreen extends ConsumerWidget {
   }
 }
 
-class _LoanProgressCard extends ConsumerWidget {
-  final LoanEntity loan;
+class _TimelineEntry extends StatelessWidget {
+  final PaymentEntity payment;
   final NumberFormat currency;
+  final DateFormat dateFormat;
+  final bool isFirst;
+  final bool isLast;
 
-  const _LoanProgressCard({required this.loan, required this.currency});
+  const _TimelineEntry({
+    required this.payment,
+    required this.currency,
+    required this.dateFormat,
+    required this.isFirst,
+    required this.isLast,
+  });
+
+  Color get _color {
+    switch (payment.status) {
+      case PaymentStatus.paid:
+      case PaymentStatus.early:
+        return AppColors.success;
+      case PaymentStatus.late:
+        return AppColors.danger;
+      case PaymentStatus.pending:
+        return AppColors.warning;
+    }
+  }
+
+  IconData get _icon {
+    switch (payment.status) {
+      case PaymentStatus.paid:
+        return Icons.check_rounded;
+      case PaymentStatus.early:
+        return Icons.arrow_upward_rounded;
+      case PaymentStatus.late:
+        return Icons.priority_high_rounded;
+      case PaymentStatus.pending:
+        return Icons.schedule_rounded;
+    }
+  }
+
+  String get _statusLabel {
+    switch (payment.status) {
+      case PaymentStatus.paid:
+        return 'Pagado';
+      case PaymentStatus.early:
+        return 'Adelantado';
+      case PaymentStatus.late:
+        return 'Atrasado';
+      case PaymentStatus.pending:
+        return 'Pendiente';
+    }
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final paymentsAsync = ref.watch(loanPaymentsProvider(loan.id));
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: paymentsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Text('Error: $e'),
-        data: (payments) {
-          final paid = payments
-              .where((p) => p.status != PaymentStatus.pending)
-              .length;
-          final pending = payments.length - paid;
-          final late = payments.where((p) => p.status == PaymentStatus.late).length;
-          final progress = payments.isEmpty ? 0.0 : paid / payments.length;
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Préstamo #${loan.id.substring(0, 8)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
-              Text('Monto total: ${currency.format(loan.totalAmount)}'),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(value: progress),
-              const SizedBox(height: 8),
-              Text('Cuotas pagadas: $paid/${payments.length}'),
-              Text('Cuotas faltantes: $pending'),
-              Text(
-                'Pagos atrasados: $late',
-                style: TextStyle(
-                    color: late > 0 ? AppColors.danger : AppColors.textSecondary,
-                    fontWeight: late > 0 ? FontWeight.w600 : FontWeight.normal),
+  Widget build(BuildContext context) {
+    final dateToShow = payment.paidDate ?? payment.expectedDate;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Columna del timeline (línea + círculo de estado)
+          SizedBox(
+            width: 36,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: isFirst
+                        ? Colors.transparent
+                        : Colors.grey.shade300,
+                  ),
+                ),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: _color,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: _color.withValues(alpha: 0.3),
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Icon(_icon, color: Colors.white, size: 16),
+                ),
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color:
+                        isLast ? Colors.transparent : Colors.grey.shade300,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Card de la cuota
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Cuota #${payment.paymentNumber}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            dateFormat.format(dateToShow),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _statusLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: _color,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          currency.format(payment.amount),
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        if (payment.penaltyAmount > 0)
+                          Text(
+                            '+ ${currency.format(payment.penaltyAmount)} sanción',
+                            style: const TextStyle(
+                              color: AppColors.danger,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       ),
     );
   }

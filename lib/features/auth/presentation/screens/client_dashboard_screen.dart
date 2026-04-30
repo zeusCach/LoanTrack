@@ -3,15 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../loans/domain/entities/loan_entity.dart';
-import '../../../loans/presentation/providers/loan_provider.dart';
 import '../../../notifications/domain/entities/client_notification_entity.dart';
 import '../../../notifications/presentation/providers/notification_provider.dart';
 import '../../../payments/domain/entities/payment_entity.dart';
 import '../../../payments/presentation/providers/payment_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/client_dashboard_provider.dart';
-import '../providers/logout.dart';
+
+const _headerColor = Color(0xFF1A237E);
 
 class ClientDashboardScreen extends ConsumerStatefulWidget {
   const ClientDashboardScreen({super.key});
@@ -55,164 +54,33 @@ class _ClientDashboardScreenState extends ConsumerState<ClientDashboardScreen> {
     );
 
     final statsAsync = ref.watch(clientDashboardStatsProvider(user.uid));
-    final loansAsync = ref.watch(clientLoansProvider(user.uid));
+    final paymentsAsync = ref.watch(clientPaymentsProvider(user.uid));
     final currency = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        title: Text('Mi panel · ${user.name}'),
-        actions: [
-          IconButton(
-            onPressed: () => performLogout(ref),
-            icon: const Icon(Icons.logout),
-          ),
-        ],
-      ),
+      backgroundColor: AppColors.background,
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(clientLoansProvider(user.uid));
-          ref.invalidate(clientDashboardStatsProvider(user.uid));
+          ref.invalidate(clientPaymentsProvider(user.uid));
         },
-        child: SingleChildScrollView(
+        child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                DateFormat('EEEE, d MMMM yyyy', 'es').format(DateTime.now()),
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 16),
-              statsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Text('Error: $e'),
-                data: (stats) => Column(
-                  children: [
-                    Row(
-                      children: [
-                        _StatCard('Préstamos activos', '${stats.activeLoans}',
-                            Icons.account_balance_rounded, AppColors.primary),
-                        const SizedBox(width: 12),
-                        _StatCard('Cuotas pagadas', '${stats.paidInstallments}',
-                            Icons.check_circle_rounded, AppColors.success),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        _StatCard('Pendientes', '${stats.pendingInstallments}',
-                            Icons.schedule_rounded, AppColors.warning),
-                        const SizedBox(width: 12),
-                        _StatCard('Atrasadas', '${stats.lateInstallments}',
-                            Icons.warning_rounded, AppColors.danger),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                              'Saldo restante: ${currency.format(stats.remainingBalance)}',
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 8),
-                          LinearProgressIndicator(value: stats.progress),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Pagado ${currency.format(stats.totalPaid)} de ${currency.format(stats.totalDebt)}',
-                            style: const TextStyle(
-                                color: AppColors.textSecondary, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text('Estado de mis préstamos',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 10),
-              loansAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Text('Error: $e'),
-                data: (loans) {
-                  if (loans.isEmpty) {
-                    return const Text('No tienes préstamos registrados.');
-                  }
-                  return Column(
-                    children: loans
-                        .map((loan) => _LoanStatusCard(loan: loan))
-                        .toList(),
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => context.push('/client/payments'),
-                      icon: const Icon(Icons.receipt_long_rounded),
-                      label: const Text('Historial pagos'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => context.push('/client/history'),
-                      icon: const Icon(Icons.track_changes_rounded),
-                      label: const Text('Progreso'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _StatCard(this.label, this.value, this.icon, this.color);
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          padding: EdgeInsets.zero,
           children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 8),
-            Text(value,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 12, color: AppColors.textSecondary)),
+            _Header(
+              userName: user.name,
+              statsAsync: statsAsync,
+              currency: currency,
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _NextPaymentCard(
+                paymentsAsync: paymentsAsync,
+                currency: currency,
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -220,45 +88,344 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _LoanStatusCard extends ConsumerWidget {
-  final LoanEntity loan;
+// ─── Header con saludo + avatar + balance ──────────────────────────────────
 
-  const _LoanStatusCard({required this.loan});
+class _Header extends StatelessWidget {
+  final String userName;
+  final AsyncValue<ClientDashboardStats> statsAsync;
+  final NumberFormat currency;
+
+  const _Header({
+    required this.userName,
+    required this.statsAsync,
+    required this.currency,
+  });
+
+  String get _initials {
+    final parts = userName.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '?';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final paymentsAsync = ref.watch(loanPaymentsProvider(loan.id));
-
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: _headerColor,
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(24)),
       ),
-      child: paymentsAsync.when(
-        loading: () => const LinearProgressIndicator(minHeight: 8),
-        error: (e, _) => Text('Error: $e'),
-        data: (payments) {
-          final paid =
-              payments.where((p) => p.status != PaymentStatus.pending).length;
-          final late =
-              payments.where((p) => p.status == PaymentStatus.late).length;
-          final progress = payments.isEmpty ? 0.0 : (paid / payments.length);
+      padding: EdgeInsets.fromLTRB(20, topPadding + 20, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Bienvenido',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      userName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                tooltip: 'Configuración',
+                onPressed: () => context.push('/client/settings'),
+              ),
+              const SizedBox(width: 4),
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                child: Text(
+                  _initials,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          _BalanceCard(statsAsync: statsAsync, currency: currency),
+        ],
+      ),
+    );
+  }
+}
 
+class _BalanceCard extends StatelessWidget {
+  final AsyncValue<ClientDashboardStats> statsAsync;
+  final NumberFormat currency;
+
+  const _BalanceCard({required this.statsAsync, required this.currency});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      ),
+      child: statsAsync.when(
+        loading: () => const SizedBox(
+          height: 80,
+          child: Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
+        ),
+        error: (e, _) => Text(
+          'Error: $e',
+          style: const TextStyle(color: Colors.white),
+        ),
+        data: (stats) {
+          final paid = stats.paidInstallments;
+          final total = stats.paidInstallments + stats.pendingInstallments;
+          final progress = total == 0 ? 0.0 : paid / total;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Préstamo ${loan.id.substring(0, 8)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(value: progress),
+              Text(
+                'Saldo pendiente',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.75),
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                currency.format(stats.remainingBalance),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 14),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  valueColor:
+                      const AlwaysStoppedAnimation(AppColors.success),
+                ),
+              ),
               const SizedBox(height: 6),
               Text(
-                  'Cuotas pendientes: ${payments.length - paid} · Atrasadas: $late'),
+                'Cuotas pagadas $paid / $total',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  fontSize: 12,
+                ),
+              ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+// ─── Card de próximo pago ──────────────────────────────────────────────────
+
+class _NextPaymentCard extends StatelessWidget {
+  final AsyncValue<List<PaymentEntity>> paymentsAsync;
+  final NumberFormat currency;
+
+  const _NextPaymentCard({
+    required this.paymentsAsync,
+    required this.currency,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return paymentsAsync.when(
+      loading: () => const SizedBox(
+          height: 100, child: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Text('Error: $e'),
+      data: (payments) {
+        final pending = payments
+            .where((p) => p.status == PaymentStatus.pending)
+            .toList()
+          ..sort((a, b) => a.expectedDate.compareTo(b.expectedDate));
+
+        if (pending.isEmpty) {
+          return _UpToDateCard();
+        }
+        final next = pending.first;
+        return _DuePaymentCard(payment: next, currency: currency);
+      },
+    );
+  }
+}
+
+class _UpToDateCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(width: 4, color: AppColors.success),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.check_circle_rounded,
+                          color: AppColors.success, size: 26),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('¡Estás al día!',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.success)),
+                          SizedBox(height: 2),
+                          Text(
+                            'No tienes cuotas pendientes por pagar.',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DuePaymentCard extends StatelessWidget {
+  final PaymentEntity payment;
+  final NumberFormat currency;
+
+  const _DuePaymentCard({required this.payment, required this.currency});
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateTime.now();
+    final start = DateTime(today.year, today.month, today.day);
+    final due = DateTime(payment.expectedDate.year, payment.expectedDate.month,
+        payment.expectedDate.day);
+    final daysLeft = due.difference(start).inDays;
+
+    String label;
+    if (daysLeft > 1) {
+      label = 'Faltan $daysLeft días';
+    } else if (daysLeft == 1) {
+      label = 'Vence mañana';
+    } else if (daysLeft == 0) {
+      label = 'Vence hoy';
+    } else {
+      label = 'Atrasado ${daysLeft.abs()} día(s)';
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      clipBehavior: Clip.hardEdge,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(width: 4, color: AppColors.warning),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Próximo pago',
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary)),
+                    const SizedBox(height: 4),
+                    Text(
+                      currency.format(payment.amount),
+                      style: const TextStyle(
+                          fontSize: 28, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.schedule_rounded,
+                            size: 16, color: AppColors.warning),
+                        const SizedBox(width: 6),
+                        Text(
+                          label,
+                          style: const TextStyle(
+                              color: AppColors.warning,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Vence: ${DateFormat('dd/MM/yyyy').format(payment.expectedDate)} · Cuota #${payment.paymentNumber}',
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

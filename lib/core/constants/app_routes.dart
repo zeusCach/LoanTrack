@@ -4,6 +4,7 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/auth/presentation/screens/admin_settings_screen.dart';
 import '../../features/auth/presentation/screens/client_dashboard_screen.dart';
+import '../../features/auth/presentation/screens/client_settings_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/clients/presentation/screens/clients_screen.dart';
 import '../../features/loans/presentation/screens/admin_loans_screen.dart';
@@ -12,6 +13,7 @@ import '../../features/payments/presentation/screens/admin_payments_screen.dart'
 import '../../features/payments/presentation/screens/client_payments_screen.dart';
 import '../../features/reports/presentation/screens/admin_reports_screen.dart';
 import '../widgets/admin_shell.dart';
+import '../widgets/client_shell.dart';
 import '../widgets/entity_loaders.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -100,18 +102,36 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const AdminSettingsScreen(),
       ),
 
-      // Client
-      GoRoute(
-        path: '/client/dashboard',
-        builder: (_, __) => const ClientDashboardScreen(),
+      // Client shell con bottom nav (Inicio, Mis pagos, Historial)
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            ClientShellScaffold(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/client/dashboard',
+              builder: (_, __) => const ClientDashboardScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/client/payments',
+              builder: (_, __) => const ClientPaymentsScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/client/history',
+              builder: (_, __) => const ClientLoansStatusScreen(),
+            ),
+          ]),
+        ],
       ),
+
+      // Pantallas client fuera del shell
       GoRoute(
-        path: '/client/payments',
-        builder: (_, __) => const ClientPaymentsScreen(),
-      ),
-      GoRoute(
-        path: '/client/history',
-        builder: (_, __) => const ClientLoansStatusScreen(),
+        path: '/client/settings',
+        builder: (_, __) => const ClientSettingsScreen(),
       ),
     ],
   );
