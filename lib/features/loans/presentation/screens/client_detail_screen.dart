@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:loantrack/features/loans/presentation/screens/loan_detail_screen.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../clients/domain/entities/client_entity.dart';
 import '../providers/loan_provider.dart';
 import '../../domain/entities/loan_entity.dart';
@@ -47,6 +47,101 @@ class ClientDetailScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _editClientName(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController(text: client.name);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Editar nombre del cliente'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Nombre'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+    if (newName == null || newName.isEmpty || newName == client.name) return;
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .updateUserName(uid: client.uid, name: newName);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Nombre actualizado'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _sendClientReset(BuildContext context, WidgetRef ref) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Restablecer contraseña'),
+        content: Text(
+          'Se enviará un enlace de restablecimiento al correo del cliente '
+          '(${client.email}). El cliente fijará su nueva contraseña desde ahí. '
+          '¿Continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Enviar'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .sendPasswordResetEmail(client.email);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Correo enviado a ${client.email}'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final loansAsync = ref.watch(clientLoansProvider(client.uid));
@@ -58,6 +153,34 @@ class ClientDetailScreen extends ConsumerWidget {
         title: Text(client.name),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: (value) async {
+              if (value == 'edit_name') {
+                await _editClientName(context, ref);
+              } else if (value == 'reset_password') {
+                await _sendClientReset(context, ref);
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'edit_name',
+                child: ListTile(
+                  leading: Icon(Icons.edit_outlined),
+                  title: Text('Editar nombre'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'reset_password',
+                child: ListTile(
+                  leading: Icon(Icons.lock_reset_rounded),
+                  title: Text('Enviar correo de restablecimiento'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
