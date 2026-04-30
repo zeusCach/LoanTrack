@@ -37,7 +37,13 @@ class AdminDashboardScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Configuración',
+            onPressed: () => context.push('/admin/settings'),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
+            tooltip: 'Cerrar sesión',
             onPressed: () async {
               await performLogout(ref);
             },

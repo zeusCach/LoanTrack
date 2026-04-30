@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/user_entity.dart';
@@ -38,5 +37,26 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> logout() async {
     await _dataSource.logout();
+  }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _dataSource.sendPasswordResetEmail(email);
+    } on AuthException catch (e) {
+      throw AuthFailure(e.message);
+    }
+  }
+
+  @override
+  Future<void> updateUserName({
+    required String uid,
+    required String name,
+  }) async {
+    try {
+      await _dataSource.updateUserName(uid: uid, name: name);
+    } on AuthException catch (e) {
+      throw AuthFailure(e.message);
+    }
   }
 }
